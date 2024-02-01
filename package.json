@@ -1,0 +1,22 @@
+{
+  "name": "fism",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "size": "size-limit",
+    "build": "node ./scripts/build.js",
+    "test": "vitest",
+    "serve": "serve"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^11.0.2",
+    "esbuild": "^0.20.0",
+    "jsdom": "^24.0.0",
+    "puppeteer": "^21.10.0",
+    "vite": "^5.0.12",
+    "vitest": "^1.2.2"
+  }
+}
