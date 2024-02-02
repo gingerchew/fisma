@@ -1,7 +1,7 @@
 {
-  "name": "fism",
+  "name": "fisma",
   "version": "0.5.0",
-  "description": "A FInite State Machine built with iterators",
+  "description": "A FInite State MAchine built with iterators",
   "main": "index.js",
   "type": "module",
   "scripts": {

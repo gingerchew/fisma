@@ -1,11 +1,11 @@
-# FISM
+# FISMA
 
-A **FI**nite **S**tate **M**achine using iterators
+A **FI**nite **S**tate **MA**chine using iterators
 
 ## How to use
 
 ```js
-import { createMachine } from 'fism';
+import { createMachine } from 'fisma';
 
 const m = createMachine([
     'A',
@@ -73,7 +73,7 @@ m.done; // true
 
 ## Things to be aware of
 
-- Unlike XState, fism doesn't have a `.start(initialState)` method. The initial state is _always_ the first item in the states array.
+- There isn't a `.start(initialState)` method. The initial state is _always_ the first item in the states array.
 - While actions are passed a "context" object, currently the context is the active state object and it is **not** safe to store or alter that information.
 - `active` and `done` might be confusing, `active` is for the name of the active state, `done` is the status of the machine itself.
 
