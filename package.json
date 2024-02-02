@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "size": "size-limit",
     "build": "node ./scripts/build.js",
+    "coverage": "vitest run --coverage",
     "test": "vitest",
     "serve": "serve"
   },
@@ -13,10 +15,17 @@
   "license": "MIT",
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.0.2",
+    "@vitest/coverage-v8": "^1.2.2",
     "esbuild": "^0.20.0",
     "jsdom": "^24.0.0",
     "puppeteer": "^21.10.0",
     "vite": "^5.0.12",
     "vitest": "^1.2.2"
-  }
+  },
+  "size-limit": [
+    {
+      "path": "src/index.ts",
+      "limit": "5kb"
+    }
+  ]
 }
