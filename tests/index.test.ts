@@ -13,8 +13,8 @@ describe('Finite State Machine', () => {
 
     test('Goes to next state', () => {
         const _ = createMachine([
-            { name: 'A' },
-            { name: 'B' }
+            { type: 'A' },
+            { type: 'B' }
         ]);
 
         expect(_.active).toBe('A');
@@ -24,8 +24,8 @@ describe('Finite State Machine', () => {
 
     test('Is destroyed properly', () => {
         const _ = createMachine([
-            { name: 'A' },
-            { name: 'B' }
+            { type: 'A' },
+            { type: 'B' }
         ]);
 
         expect(_.done).toBe(false);
@@ -35,23 +35,11 @@ describe('Finite State Machine', () => {
         expect(_.done).toBe(true);
     });
 
-    test('Matches', () => {
-        const _ = createMachine([
-            { name: 'A' },
-            { name: 'B' }
-        ]);
-
-        expect(_.matches('A')).toBe(true);
-        _.next();
-        expect(_.matches('B')).toBe(true);
-        expect(_.matches('C')).toBe(false);
-    });
-
     test('Enter actions: single', () => {
         let i = 0;
         const _ = createMachine([
-            { name: 'A' },
-            { name: 'B', enter() { i = 1; } }
+            { type: 'A' },
+            { type: 'B', enter() { i += 1; } }
         ]);
 
         expect(i).toBe(0);
@@ -64,8 +52,8 @@ describe('Finite State Machine', () => {
         let incr = () => i += 1;
 
         const _ = createMachine([
-            { name: 'A' },
-            { name: 'B', enter: [ incr, incr, incr ] }
+            { type: 'A' },
+            { type: 'B', enter: [ incr, incr, incr ] }
         ]);
         expect(i).toBe(0);
         _.next();
@@ -75,8 +63,8 @@ describe('Finite State Machine', () => {
     test('Exit actions: single', () => {
         let i = 0;
         const _ = createMachine([
-            { name: 'A', exit() { i += 1 } },
-            { name: 'B' }
+            { type: 'A', exit() { i += 1 } },
+            { type: 'B' }
         ]);
 
         expect(i).toBe(0);
@@ -89,9 +77,10 @@ describe('Finite State Machine', () => {
         let incr = () => i += 1;
 
         const _ = createMachine([
-            { name: 'A', exit: [ incr, incr, incr ]},
-            { name: 'B' }
+            { type: 'A', exit: [ incr, incr, incr ]},
+            { type: 'B' }
         ]);
+
         expect(i).toBe(0);
         _.next();
         expect(i).toBe(3);
@@ -99,9 +88,9 @@ describe('Finite State Machine', () => {
 
     test('Transition', () => {
         const _ = createMachine([
-            { name: 'A' },
-            { name: 'B' },
-            { name: 'TOGGLE' }
+            { type: 'A' },
+            { type: 'B' },
+            { type: 'TOGGLE' }
         ]);
 
         expect(_.active).toBe('A');
@@ -111,10 +100,21 @@ describe('Finite State Machine', () => {
         expect(_.active).toBe('TOGGLE');
     });
 
+    test('Transition to non-existant state', () => {
+        const _ = createMachine([
+            { type: 'A' },
+            { type: 'B' }
+        ]);
+
+        expect(_.active).toBe('A');
+        _.next('C');
+        expect(_.active).toBe('A');
+    });
+
     test('Support string only state', () => {
         const _ = createMachine([
             'A',
-            { name: 'B' }
+            { type: 'B' }
         ]);
 
         expect(_.active).toBe('A');
@@ -123,16 +123,68 @@ describe('Finite State Machine', () => {
     test('Subscribe', () => {
         let i = 0;
         const _ = createMachine([
-            { name: 'A' },
-            { name: 'B' }
+            { type: 'A' },
+            { type: 'B' }
         ]);
 
-        _.subscribe(() => {
-            i += 1
-        });
+        const unsub = _.subscribe(() => i += 1);
 
         expect(i).toBe(1);
         _.next();
         expect(i).toBe(2);
+        unsub();
+        _.next();
+        expect(i).toBe(2);
+    });
+
+    test('Send', () => {
+        const _ = createMachine([
+            { 
+                type: 'A',
+                on: { 
+                    NEXT: 'C'
+                }
+            },
+            {
+                type: 'B'
+            },
+            {
+                type: 'C'
+            }
+        ]);
+
+
+        expect(_.active).toBe('A');
+        _.send('NEXT');
+        expect(_.active).toBe('C');
+    });
+
+    test('Send Actions', () => {
+        let i = 0;
+        const _ = createMachine([
+            {
+                type: 'A',
+                on: {
+                    NEXT: {
+                        target: 'C',
+                        actions: [
+                            () => i += 1
+                        ]
+                    }
+                }
+            },
+            { type: 'B' },
+            { type: 'C' }
+        ]);
+
+        expect(i).toBe(0);
+        _.next();
+        expect(i).toBe(0);
+        _.next('A');
+        
+        _.send('NEXT');
+        
+        expect(i).toBe(1);
     })
-})
+    
+});
