@@ -1,5 +1,6 @@
 // @ts-check
 /// <reference path="./node_modules/esbuild/lib/main.d.ts">
+/* v8 ignore file */
 import esbuild from 'esbuild';
 
 /** @type {esbuild.BuildOptions} */
