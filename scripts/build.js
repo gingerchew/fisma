@@ -21,7 +21,7 @@ const minConfig = Object.assign({}, config, {
 });
 
 try {    
-    esbuild.build(minConfig)
+    esbuild.build(minConfig);
     esbuild.build(config);
 } catch(err) {
     throw err;
