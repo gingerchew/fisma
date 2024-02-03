@@ -22,8 +22,6 @@ interface State {
     exit?: Action|Action[];
 }
 
-const UNINIT = -1
-
 function* _FSM(states:State[]) {
 	function runActions(actions:Action|Action[] = []) {
 		if (!(actions as Action[]).pop) {
@@ -33,7 +31,7 @@ function* _FSM(states:State[]) {
 	}
 
 	let nextState = 0,
-		prevState = UNINIT,
+		prevState = -1,
 		activeState = states[nextState],
         requestedState:string|undefined;
 
@@ -48,28 +46,29 @@ function* _FSM(states:State[]) {
 		
 		requestedState = yield activeState;
 
+        runActions(states[prevState]?.exit);
+
         if (requestedState !== undefined) {
             nextState = states.findIndex(state => state.type === requestedState);
-            if (nextState === UNINIT) nextState = prevState;
+            if (nextState === -1) nextState = prevState;
         } else {
             nextState = states.findIndex(states => states.type === activeState.type) + 1;
         }
-
-		runActions(states[prevState]?.exit);
 	}
 }
 
-function createMachine(states?:(string|State)[]) {
+function createMachine(states:(string|State)[]) {
+    if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
     states = states?.map(state => typeof state === 'string' ? ({ type: state }) : state);
 	const _states = _FSM((states as State[]) ?? []);
     let _ctx = _states.next();
 	
     const listeners = new Set<Listener>();
 
-	return {
+	const $ = {
         /** Getters */
-        get active() {
-            return _ctx.value?.type ?? UNINIT
+        get current() {
+            return _ctx.value?.type ?? -1
         },
         get done() {
             return _ctx.done;
@@ -92,7 +91,7 @@ function createMachine(states?:(string|State)[]) {
             if ((next as StateTarget).actions?.length) {
                 (next as StateTarget).actions!.forEach(action => action(_ctx.value!))
             }
-            this.next((next as StateTarget)?.target ?? next)
+            $.next((next as StateTarget)?.target ?? next)
         },
         /**
          * Toggle through the state machine
@@ -112,6 +111,7 @@ function createMachine(states?:(string|State)[]) {
             listeners.forEach(listener => listeners.delete(listener));
 		}
 	}
+    return $;
 }
 
 

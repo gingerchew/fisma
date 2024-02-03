@@ -1,15 +1,22 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { createMachine } from '../src/index';
 
 
 describe('Finite State Machine', () => {
     test('Returns createMachine object', () => {
-        const _ = createMachine();
+        const _ = createMachine(['A']);
 
+        expect(_.current).toBe('A');
+        expect(_.done).toBe(false);
         expect('next' in _).toBe(true);
         expect('destroy' in _).toBe(true);
+        expect('send' in _).toBe(true);
+        expect('subscribe' in _).toBe(true);
     });
+
+    // @ts-ignore
+    test.fails('Fails when stateless', () => createMachine())
 
     test('Goes to next state', () => {
         const _ = createMachine([
@@ -17,16 +24,13 @@ describe('Finite State Machine', () => {
             { type: 'B' }
         ]);
 
-        expect(_.active).toBe('A');
+        expect(_.current).toBe('A');
         _.next();
-        expect(_.active).toBe('B');
+        expect(_.current).toBe('B');
     });
 
     test('Is destroyed properly', () => {
-        const _ = createMachine([
-            { type: 'A' },
-            { type: 'B' }
-        ]);
+        const _ = createMachine(['A']);
 
         expect(_.done).toBe(false);
 
@@ -93,11 +97,11 @@ describe('Finite State Machine', () => {
             { type: 'TOGGLE' }
         ]);
 
-        expect(_.active).toBe('A');
+        expect(_.current).toBe('A');
 
         _.next('TOGGLE');
 
-        expect(_.active).toBe('TOGGLE');
+        expect(_.current).toBe('TOGGLE');
     });
 
     test('Transition to non-existant state', () => {
@@ -106,9 +110,9 @@ describe('Finite State Machine', () => {
             { type: 'B' }
         ]);
 
-        expect(_.active).toBe('A');
+        expect(_.current).toBe('A');
         _.next('C');
-        expect(_.active).toBe('A');
+        expect(_.current).toBe('A');
     });
 
     test('Support string only state', () => {
@@ -117,7 +121,7 @@ describe('Finite State Machine', () => {
             { type: 'B' }
         ]);
 
-        expect(_.active).toBe('A');
+        expect(_.current).toBe('A');
     });
 
     test('Subscribe', () => {
@@ -154,9 +158,9 @@ describe('Finite State Machine', () => {
         ]);
 
 
-        expect(_.active).toBe('A');
+        expect(_.current).toBe('A');
         _.send('NEXT');
-        expect(_.active).toBe('C');
+        expect(_.current).toBe('C');
     });
 
     test('Send Actions', () => {
