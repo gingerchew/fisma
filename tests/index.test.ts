@@ -191,4 +191,18 @@ describe('Finite State Machine', () => {
         expect(i).toBe(1);
     })
     
+
+    test('Context', () => {
+        const _ = createMachine<{ i: number }>([
+            'A', 'B', 'C'
+        ], { i: 0 });
+
+        _.subscribe((_state, ctx) => {
+            ctx.i += 1;
+        });
+
+        expect(_.ctx.i).toBe(1);
+        _.next();
+        expect(_.ctx.i).toBe(2);
+    });
 });

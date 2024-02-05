@@ -5,8 +5,8 @@
  * For the time being yes. Once the idea for what `context` will be
  * in this... context... these two will differentiate themselves.
  */
-type Action = (ctx: State) => void;
-type Listener = (ctx: State) => void
+type Context = Record<string, any>;
+type Action = (state: State, ctx: Context) => void;
 
 interface StateTarget {
     target: string;
@@ -22,12 +22,12 @@ interface State {
     exit?: Action|Action[];
 }
 
-function* _FSM(states:State[]) {
+function* _FSM(states:State[], ctx:Context) {
 	function runActions(actions:Action|Action[] = []) {
 		if (!(actions as Action[]).pop) {
 			actions = [actions as Action];
 		}
-		(actions as Action[]).forEach((action) => action(activeState));
+		(actions as Action[]).forEach((action) => action(activeState, ctx));
 	}
 
 	let nextState = 0,
@@ -57,39 +57,43 @@ function* _FSM(states:State[]) {
 	}
 }
 
-function createMachine(states:(string|State)[]) {
+function createMachine<T extends Context>(states:(string|State)[], ctx?:T) {
+    ctx ??= {} as T;
     if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
     states = states?.map(state => typeof state === 'string' ? ({ type: state }) : state);
-	const _states = _FSM((states as State[]) ?? []);
-    let _ctx = _states.next();
+	const _states = _FSM((states as State[]) ?? [], ctx);
+    let _state = _states.next();
 	
-    const listeners = new Set<Listener>();
+    const listeners = new Set<Action>();
 
 	const $ = {
+        get ctx() {
+            return ctx;
+        },
         /** Getters */
         get current() {
-            return _ctx.value?.type ?? -1
+            return _state.value?.type ?? -1
         },
         get done() {
-            return _ctx.done;
+            return _state.done;
         },
         /** Methods */
         /**
          * Add a listener that fires on every state change
          */
-        subscribe(listener:Listener) {
+        subscribe(listener:Action) {
             listeners.add(listener);
 
-            listener(_ctx.value!);
+            listener(_state.value!, ctx);
             return () => listeners.delete(listener);
         },
         send(eventType:string) {
-            if (!_ctx.value!.on) return;
+            if (!_state.value!.on) return;
 
-            let next = _ctx.value?.on[eventType];
+            let next = _state.value?.on[eventType];
 
             if ((next as StateTarget).actions?.length) {
-                (next as StateTarget).actions!.forEach(action => action(_ctx.value!))
+                (next as StateTarget).actions!.forEach(action => action(_state.value!, ctx))
             }
             $.next((next as StateTarget)?.target ?? next)
         },
@@ -100,14 +104,14 @@ function createMachine(states:(string|State)[]) {
          * the next in index order
          */
 		next(requestedState?:string) {
-			_ctx = _states.next(requestedState);
-            listeners.forEach(listener => listener(_ctx.value!));
+			_state = _states.next(requestedState);
+            listeners.forEach(listener => listener(_state.value!, ctx));
 		},
         /**
          * Kill the state machine/generator
          */
 		destroy() {
-			_ctx = _states.return();
+			_state = _states.return();
             listeners.forEach(listener => listeners.delete(listener));
 		}
 	}
