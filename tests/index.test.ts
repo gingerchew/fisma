@@ -5,12 +5,12 @@ import { createMachine } from '../src/index';
 
 describe('Finite State Machine', () => {
     test('Returns createMachine object', () => {
-        const _ = createMachine(['A']);
+        const _ = createMachine([{ type: 'A' }]);
 
         expect(_.current).toBe('A');
         expect(_.done).toBe(false);
         expect('next' in _).toBe(true);
-        expect('destroy' in _).toBe(true);
+        expect('stop' in _).toBe(true);
         expect('send' in _).toBe(true);
         expect('subscribe' in _).toBe(true);
     });
@@ -30,11 +30,11 @@ describe('Finite State Machine', () => {
     });
 
     test('Is destroyed properly', () => {
-        const _ = createMachine(['A']);
+        const _ = createMachine([{ type: 'A' }]);
 
         expect(_.done).toBe(false);
 
-        _.destroy();
+        _.stop();
 
         expect(_.done).toBe(true);
     });
@@ -115,15 +115,6 @@ describe('Finite State Machine', () => {
         expect(_.current).toBe('A');
     });
 
-    test('Support string only state', () => {
-        const _ = createMachine([
-            'A',
-            { type: 'B' }
-        ]);
-
-        expect(_.current).toBe('A');
-    });
-
     test('Subscribe', () => {
         let i = 0;
         const _ = createMachine([
@@ -193,16 +184,18 @@ describe('Finite State Machine', () => {
     
 
     test('Context', () => {
-        const _ = createMachine<{ i: number }>([
-            'A', 'B', 'C'
-        ], { i: 0 });
+        let ctx = { i: 0 }
 
-        _.subscribe((_state, ctx) => {
-            ctx.i += 1;
+        const _ = createMachine<{ i: number }>([
+            { type: 'A' }, { type: 'B' }, { type: 'C' }
+        ], ctx);
+        
+        _.subscribe((_state, _ctx) => {
+            _ctx.i += 1;
         });
 
-        expect(_.ctx.i).toBe(1);
+        expect(ctx.i).toBe(1);
         _.next();
-        expect(_.ctx.i).toBe(2);
+        expect(ctx.i).toBe(2);
     });
 });
