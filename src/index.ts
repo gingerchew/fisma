@@ -31,18 +31,22 @@ const runActions = <MachineContext extends Context> (actions: ActionsParam<Machi
             actions.forEach(action => action(activeState, ctx))
     );
 
-
+function* FSM<MachineContext extends Context>(states:State<MachineContext>[], ctx:MachineContext) {
 	let nextState = 0,
 		prevState = -1,
 		activeState = states[nextState],
+        // Appeases the TS gods, now that the compiler thinks this can change, the return is reachable.
+        shouldContinue = true,
         requestedState:string|undefined;
-
-	while (true) {
+	
+    while (shouldContinue) {
 		if (nextState >= states.length) nextState = 0;
 		
 		runActions<MachineContext>(states[nextState].enter, activeState, ctx);
 		
-		requestedState = yield activeState;
+		requestedState = yield activeState = states[
+            prevState = nextState
+        ];
 
         runActions<MachineContext>(states[prevState].exit, activeState, ctx);
 
@@ -53,6 +57,7 @@ const runActions = <MachineContext extends Context> (actions: ActionsParam<Machi
             nextState = states.findIndex(states => states.type === activeState.type) + 1;
         }
 	}
+    return states[nextState];
 }
 
 function createMachine<T extends Context>(states:(string|State)[], ctx?:T) {
