@@ -6,20 +6,22 @@
  * in this... context... these two will differentiate themselves.
  */
 type Context = Record<string, any>;
-type Action = (state: State, ctx: Context) => void;
 
-interface StateTarget {
+type Action<T extends Context> = (state: State<T>, ctx: T) => void;
+type ActionsParam<T extends Context> = Action<T>|Action<T>[]|undefined;
+
+interface StateTarget<T extends Context> {
     target: string;
-    actions: Action[];
+    actions: Action<T>[];
 }
 
-type Events = Record<string, string | StateTarget>;
+type Events<T extends Context> = Record<string, string | StateTarget<T>>;
 
-interface State {
+interface State<T extends Context> {
     type: string;
-    on?: Events;
-    enter?: Action|Action[];
-    exit?: Action|Action[];
+    on?: Events<T>;
+    enter?: Action<T>|Action<T>[];
+    exit?: Action<T>|Action<T>[];
 }
 
 function* _FSM(states:State[], ctx:Context) {
