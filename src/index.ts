@@ -84,6 +84,36 @@ function createMachine<MachineContext extends Context>(states:State<MachineConte
             listener(_state.value!, ctx);
             return () => listeners.delete(listener);
         },
+        /**
+         * Send an event to the machine
+         * 
+         * This will check the current state object
+         * and transition to the designated state if the on exists
+         * 
+         * ```js
+         * const _ = createMachine([
+         *    {
+         *      type: 'A',
+         *      on: {
+         *        TOGGLE: {
+         *          target: 'NEXT',
+         *          actions: []
+         *        }
+         *      },
+         *    },
+         *    {
+         *      type: 'B',
+         *      on: {
+         *        TOGGLE: { ... }
+         *      }
+         *    }
+         *    'NEXT'
+         * ]);
+         * 
+         * _.send('TOGGLE');
+         * ```
+         * 
+         */
         send(eventType:string) {
             if (!_state.value.on) return;
 
