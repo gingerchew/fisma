@@ -24,13 +24,13 @@ interface State<T extends Context> {
     exit?: Action<T>|Action<T>[];
 }
 
-function* _FSM(states:State[], ctx:Context) {
-	function runActions(actions:Action|Action[] = []) {
-		if (!(actions as Action[]).pop) {
-			actions = [actions as Action];
-		}
-		(actions as Action[]).forEach((action) => action(activeState, ctx));
-	}
+
+const runActions = <MachineContext extends Context> (actions: ActionsParam<MachineContext>, activeState:State<MachineContext>, ctx: MachineContext) => actions != null && (
+        typeof actions === 'function' ? 
+            actions(activeState, ctx) : 
+            actions.forEach(action => action(activeState, ctx))
+    );
+
 
 	let nextState = 0,
 		prevState = -1,
@@ -40,15 +40,11 @@ function* _FSM(states:State[], ctx:Context) {
 	while (true) {
 		if (nextState >= states.length) nextState = 0;
 		
-		runActions(states[nextState]?.enter);
-		
-		prevState = nextState;
-		
-		activeState = states[nextState];
+		runActions<MachineContext>(states[nextState].enter, activeState, ctx);
 		
 		requestedState = yield activeState;
 
-        runActions(states[prevState]?.exit);
+        runActions<MachineContext>(states[prevState].exit, activeState, ctx);
 
         if (requestedState !== undefined) {
             nextState = states.findIndex(state => state.type === requestedState);
