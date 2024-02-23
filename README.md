@@ -82,3 +82,46 @@ m.done; // true
 - [ ] Review method and getter names, e.g. ~~`active` vs. `current`~~, `next()` vs. `somethingElse()`
 - [ ] Should there be an `initial` getter
 - [ ] Shave bytes
+
+
+## Examples
+
+### Intersection
+
+```js
+let timeout = null;
+const clear = () => clearTimeout(timeout);
+const m = createMachine([
+    {
+        type: 'GREEN',
+        enter() {
+            go();
+            timeout = setTimeout(() => m.next(), 3000);
+        }
+    },
+    {
+        type: 'YELLOW',
+        on: {
+            EMERGENCY: 'GREEN',
+        },
+        enter() {
+            warning();
+            setTimeout(() => m.next(), 1500);
+        }
+    },
+    {
+        type: 'RED',
+        on: {
+            EMERGENCY: 'GREEEN'
+        },
+        enter() {
+            stop();
+            setTimeout(() => m.next(), 3000);
+        }
+    }
+]);
+
+m.next() // YELLOW
+
+m.send('EMERGENCY'); // GREEN
+```
