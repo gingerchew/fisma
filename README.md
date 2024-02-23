@@ -9,9 +9,8 @@ import { createMachine } from 'fisma';
 
 const m = createMachine([
     { type: 'A' },
-    { type: 'B' },
     {
-        type: 'C',
+        type: 'B',
         // Add enter and exit 
         // action as a method
         // or array of actions
@@ -19,13 +18,13 @@ const m = createMachine([
         exit: [() => {}]
     },
     {
-        type: 'D',
+        type: 'C',
         on: {
             RESTART: 'A'
         }
     },
     {
-        type: 'E',
+        type: 'D',
         on: {
             RESTART: {
                 target: 'A',
