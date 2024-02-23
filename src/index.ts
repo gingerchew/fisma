@@ -60,22 +60,16 @@ function* FSM<MachineContext extends Context>(states:State<MachineContext>[], ct
     return states[nextState];
 }
 
-function createMachine<T extends Context>(states:(string|State)[], ctx?:T) {
-    ctx ??= {} as T;
-    if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
-    states = states?.map(state => typeof state === 'string' ? ({ type: state }) : state);
-	const _states = _FSM((states as State[]) ?? [], ctx);
-    let _state = _states.next();
-	
-    const listeners = new Set<Action>();
+function createMachine<MachineContext extends Context>(states:State<MachineContext>[] = [], ctx = {} as MachineContext) {
+    if (!states.length) throw new Error('Machine cannot be stateless');
 
-	const $ = {
-        get ctx() {
-            return ctx;
-        },
-        /** Getters */
+    let _states = states.map((potentialState) => typeof potentialState === 'string' ? ({ type: potentialState }) : potentialState),
+        _machine = FSM<MachineContext>(_states, ctx),
+        listeners = new Set<Action<MachineContext>>(),
+        _state = _machine.next();
+    return {
         get current() {
-            return _state.value?.type ?? -1
+            return _state.value.type;
         },
         get done() {
             return _state.done;
