@@ -78,21 +78,19 @@ function createMachine<MachineContext extends Context>(states:State<MachineConte
         /**
          * Add a listener that fires on every state change
          */
-        subscribe(listener:Action) {
+        subscribe(listener:Action<MachineContext>) {
             listeners.add(listener);
 
             listener(_state.value!, ctx);
             return () => listeners.delete(listener);
         },
         send(eventType:string) {
-            if (!_state.value!.on) return;
+            if (!_state.value.on) return;
 
-            let next = _state.value?.on[eventType];
+            let next = _state.value.on[eventType] as StateTarget<MachineContext>;
 
-            if ((next as StateTarget).actions?.length) {
-                (next as StateTarget).actions!.forEach(action => action(_state.value!, ctx))
-            }
-            $.next((next as StateTarget)?.target ?? next)
+            next.actions?.forEach(action => action(_state.value, ctx));
+            this.next(next.target ?? next)
         },
         /**
          * Toggle through the state machine
