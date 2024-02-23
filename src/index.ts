@@ -135,12 +135,11 @@ function createMachine<MachineContext extends Context>(states:State<MachineConte
         /**
          * Kill the state machine/generator
          */
-		destroy() {
-			_state = _states.return();
-            listeners.forEach(listener => listeners.delete(listener));
+		stop() {
+			_state = _machine.return(this.current);
+            listeners.clear();
 		}
 	}
-    return $;
 }
 
 
