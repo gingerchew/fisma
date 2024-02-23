@@ -129,8 +129,8 @@ function createMachine<MachineContext extends Context>(states:State<MachineConte
          * the next in index order
          */
 		next(requestedState?:string) {
-			_state = _states.next(requestedState);
-            listeners.forEach(listener => listener(_state.value!, ctx));
+			_state = _machine.next(requestedState);
+            listeners.forEach(listener => listener(_state.value, ctx));
 		},
         /**
          * Kill the state machine/generator
