@@ -1,9 +1,7 @@
-
 /**
- * Are Actions and Listeners the same thing?
- * 
- * For the time being yes. Once the idea for what `context` will be
- * in this... context... these two will differentiate themselves.
+ * @NOTES I really don't like how I need to pass the
+ * context through the typing like this to get the intellisense working
+ * I wanna try and find another way before committing this as the context feature
  */
 type Context = Record<string, any>;
 
