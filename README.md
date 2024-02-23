@@ -1,6 +1,6 @@
 # FISMA
 
-A **FI**nite **S**tate **MA**chine using iterators
+A ***FI***nite ***S***tate ***MA***chine using iterators
 
 ## How to use
 
@@ -8,7 +8,7 @@ A **FI**nite **S**tate **MA**chine using iterators
 import { createMachine } from 'fisma';
 
 const m = createMachine([
-    'A',
+    { type: 'A' },
     { type: 'B' },
     {
         type: 'C',
@@ -67,7 +67,7 @@ m.current; // A
 m.next('E');
 m.send('RESTART'); // Running actions
 
-m.destroy(); // kills machine
+m.stop(); // kills machine
 m.done; // true
 ```
 
