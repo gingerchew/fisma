@@ -52,7 +52,7 @@ function* _FSM(states:State[]) {
             nextState = states.findIndex(state => state.type === requestedState);
             if (nextState === -1) nextState = prevState;
         } else {
-            nextState = states.findIndex(states => states.type === activeState.type) + 1;
+            nextState = states.findIndex(state => state.type === activeState.type) + 1;
         }
 	}
 }
