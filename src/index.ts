@@ -1,12 +1,14 @@
-
+// Add import.meta.env.* for intellisense
+/// <reference types="vite/client" />
+type InactiveState = Record<string, void>;
 /**
  * Are Actions and Listeners the same thing?
  * 
  * For the time being yes. Once the idea for what `context` will be
  * in this... context... these two will differentiate themselves.
  */
-type Action = (ctx: State) => void;
-type Listener = (ctx: State) => void
+type Action = (ctx: State|InactiveState) => void;
+type Listener = (ctx: State|InactiveState) => void
 
 interface StateTarget {
     target: string;
@@ -17,19 +19,28 @@ type Events = Record<string, string | StateTarget>;
 
 interface State {
     type: string;
-    on?: Events;
-    enter?: Action|Action[];
-    exit?: Action|Action[];
+    on: Events;
+    enter: Action|Action[];
+    exit: Action|Action[];
 }
 
-function* _FSM(states:State[]) {
-	function runActions(actions:Action|Action[] = []) {
-		if (!(actions as Action[]).pop) {
-			actions = [actions as Action];
-		}
-		(actions as Action[]).forEach((action) => action(activeState));
-	}
+type UnformattedState = Partial<State> & { type: string };
 
+const createState = (state:string|UnformattedState) => Object.assign({
+        enter: [],
+        exit: [],
+        on: {}
+    }, 
+    typeof state === 'string' ? { type: state } : state
+),  runActions = (actions: Action|Action[], activeState:State|InactiveState) => {
+        ([] as Action[]).concat(actions).forEach(action => action(activeState))
+    }
+/**
+ * The internal engine of fisma
+ * 
+ * this will loop perpetually, or until fisma.destroy() is called, and cycle through states
+ */
+function* _FSM(states:State[]):Generator<State, InactiveState, string|undefined> {
 	let nextState = 0,
 		prevState = -1,
 		activeState = states[nextState],
@@ -38,59 +49,76 @@ function* _FSM(states:State[]) {
 	while (true) {
 		if (nextState >= states.length) nextState = 0;
 		
-		runActions(states[nextState]?.enter);
+		runActions(states[nextState].enter, activeState);
 		
-		prevState = nextState;
-		
-		activeState = states[nextState];
+		activeState = states[prevState = nextState];
 		
 		requestedState = yield activeState;
 
-        runActions(states[prevState]?.exit);
+        runActions(states[prevState].exit, activeState);
 
-        if (requestedState !== undefined) {
+        if (requestedState) {
             nextState = states.findIndex(state => state.type === requestedState);
             if (nextState === -1) nextState = prevState;
         } else {
             nextState = states.findIndex(state => state.type === activeState.type) + 1;
         }
 	}
+    // Appeases the typescript gods
+    return {};
 }
 
-function createMachine(states:(string|State)[]) {
-    if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
-    states = states?.map(state => typeof state === 'string' ? ({ type: state }) : state);
-	const _states = _FSM((states as State[]) ?? []), listeners = new Set<Listener>();
-    let _ctx = _states.next();
-	
 
-	const $ = {
+interface Machine {
+    current: string|void;
+    done: boolean;
+    next: (requestedState?:string) => void;
+    subscribe: (listener:Listener) => () => void;
+    send: (eventType: string) => void;
+    destroy: () => void;
+}
+
+function createMachine(states:(string|UnformattedState)[]):Machine {
+    if (import.meta.env.DEV) {
+        if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
+    }
+	const _states = _FSM(states.map(createState)), listeners = new Set<Listener>();
+    let _ctx = _states.next();
+
+	const next = (requestedState?:string) => {
+        _ctx = _states.next(requestedState);
+        listeners.forEach(listener => listener(_ctx.value!));
+    }
+    return {
         /** Getters */
         get current() {
-            return _ctx.value?.type ?? -1
+            return _ctx.value.type
         },
         get done() {
-            return _ctx.done;
+            return !!_ctx.done;
         },
         /** Methods */
+        next,
         /**
          * Add a listener that fires on every state change
+         * returns a clean up function
          */
         subscribe(listener:Listener) {
             listeners.add(listener);
 
-            listener(_ctx.value!);
+            listener(_ctx.value);
             return () => listeners.delete(listener);
         },
         send(eventType:string) {
-            if (!_ctx.value!.on) return;
-
-            let next = _ctx.value?.on[eventType];
-
-            if ((next as StateTarget).actions?.length) {
-                (next as StateTarget).actions!.forEach(action => action(_ctx.value!))
+            const state = _ctx.value
+            if (state?.on) {
+                let nextState = state.on[eventType];
+                
+                if (typeof nextState !== 'string') {
+                    runActions(nextState.actions, state);
+                }
+                next((nextState as StateTarget)?.target ?? nextState)
             }
-            $.next((next as StateTarget)?.target ?? next)
         },
         /**
          * Toggle through the state machine
@@ -98,19 +126,15 @@ function createMachine(states:(string|State)[]) {
          * go to that state instead of
          * the next in index order
          */
-		next(requestedState?:string) {
-			_ctx = _states.next(requestedState);
-            listeners.forEach(listener => listener(_ctx.value!));
-		},
         /**
          * Kill the state machine/generator
-         */
-		destroy() {
-			_ctx = _states.return();
+        */
+       destroy() {
+            // @ts-ignore
+            _ctx = _states.return();
             listeners.forEach(listener => listeners.delete(listener));
 		}
 	}
-    return $;
 }
 
 
