@@ -1,12 +1,11 @@
 // Add import.meta.env.* for intellisense
 /// <reference types="vite/client" />
-type InactiveState = Record<string, void>;
 /**
  * Are Actions and Listeners the same thing?
  * 
  * For the time being yes. Once the idea for what `context` will be
  * in this... context... these two will differentiate themselves.
- */
+*/
 type Action = (ctx: State|InactiveState) => void;
 type Listener = (ctx: State|InactiveState) => void
 
@@ -18,12 +17,13 @@ interface StateTarget {
 type Events = Record<string, string | StateTarget>;
 
 interface State {
-    type: string;
+    type: string|-1;
     on: Events;
     enter: Action|Action[];
     exit: Action|Action[];
 }
 
+type InactiveState = Partial<State> & typeof inactiveState;
 type UnformattedState = Partial<State> & { type: string };
 
 const createState = (state:string|UnformattedState) => Object.assign({
@@ -34,7 +34,7 @@ const createState = (state:string|UnformattedState) => Object.assign({
     typeof state === 'string' ? { type: state } : state
 ),  runActions = (actions: Action|Action[], activeState:State|InactiveState) => {
         ([] as Action[]).concat(actions).forEach(action => action(activeState))
-    }
+    }, inactiveState = { type: -1 as const };
 /**
  * The internal engine of fisma
  * 
@@ -44,16 +44,28 @@ function* _FSM(states:State[]):Generator<State, InactiveState, string|undefined>
 	let nextState = 0,
 		prevState = -1,
 		activeState = states[nextState],
-        requestedState:string|undefined;
+        requestedState:string|undefined = activeState.type as string;
 
 	while (true) {
 		if (nextState >= states.length) nextState = 0;
 		
-		runActions(states[nextState].enter, activeState);
+        // prevents enter actions running on initial state
+		if (requestedState !== activeState.type)
+            runActions(states[nextState].enter, activeState);
 		
 		activeState = states[prevState = nextState];
 		
 		requestedState = yield activeState;
+
+        /**
+         * Only run actions if the requestedState is new
+         * 
+         * ```js
+         * machine.current // A
+         * machine.next('A') // no enter/exit actions will run
+         * ```
+         */
+        if (requestedState === activeState.type) continue;
 
         runActions(states[prevState].exit, activeState);
 
@@ -65,12 +77,12 @@ function* _FSM(states:State[]):Generator<State, InactiveState, string|undefined>
         }
 	}
     // Appeases the typescript gods
-    return {};
+    return inactiveState;
 }
 
 
 interface Machine {
-    current: string|void;
+    current: State['type'];
     done: boolean;
     next: (requestedState?:string) => void;
     subscribe: (listener:Listener) => () => void;
@@ -86,13 +98,14 @@ function createMachine(states:(string|UnformattedState)[]):Machine {
     let _ctx = _states.next();
 
 	const next = (requestedState?:string) => {
+        
         _ctx = _states.next(requestedState);
         listeners.forEach(listener => listener(_ctx.value!));
     }
     return {
         /** Getters */
         get current() {
-            return _ctx.value.type
+            return _ctx.value.type;
         },
         get done() {
             return !!_ctx.done;
@@ -131,7 +144,7 @@ function createMachine(states:(string|UnformattedState)[]):Machine {
         */
        destroy() {
             // @ts-ignore
-            _ctx = _states.return();
+            _ctx = _states.return(inactiveState);
             listeners.forEach(listener => listeners.delete(listener));
 		}
 	}

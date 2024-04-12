@@ -31,11 +31,12 @@ describe('Finite State Machine', () => {
 
     test('Is destroyed properly', () => {
         const _ = createMachine(['A']);
-
+        expect(_.current).toBe('A');
         expect(_.done).toBe(false);
 
         _.destroy();
 
+        expect(_.current).toBe(-1);
         expect(_.done).toBe(true);
     });
 
@@ -90,6 +91,7 @@ describe('Finite State Machine', () => {
         expect(i).toBe(3);
     });
 
+
     test('Transition', () => {
         const _ = createMachine([
             { type: 'A' },
@@ -104,7 +106,7 @@ describe('Finite State Machine', () => {
         expect(_.current).toBe('TOGGLE');
     });
 
-    test('Transition to non-existant state', () => {
+    test('Transition to non-existant state should stay at current state', () => {
         const _ = createMachine([
             { type: 'A' },
             { type: 'B' }
@@ -190,5 +192,20 @@ describe('Finite State Machine', () => {
         
         expect(i).toBe(1);
     })
-    
+
+    test('Actions should not run on send to same state', () => {
+        let i = 0;
+
+        const _ = createMachine([
+            { type: 'A', enter() { i += 1 }, exit() { i += 1 } },
+            { type: 'B' }
+        ]);
+
+        _.next('A');
+
+        expect(i).toBe(0);
+        _.next();
+
+        expect(i).toBe(1);
+    })
 });
