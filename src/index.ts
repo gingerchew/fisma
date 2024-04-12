@@ -60,10 +60,9 @@ function* _FSM(states:State[]) {
 function createMachine(states:(string|State)[]) {
     if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
     states = states?.map(state => typeof state === 'string' ? ({ type: state }) : state);
-	const _states = _FSM((states as State[]) ?? []);
+	const _states = _FSM((states as State[]) ?? []), listeners = new Set<Listener>();
     let _ctx = _states.next();
 	
-    const listeners = new Set<Listener>();
 
 	const $ = {
         /** Getters */
