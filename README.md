@@ -9,29 +9,26 @@ Fisma is a 422b (br,min) ***fi***nite ***s***tate ***ma***chine that is built on
 ```js
 import { createMachine } from 'fisma';
 
-const m = createMachine([
-    'A',
-    { type: 'B' },
-    {
-        type: 'C',
-        // Add enter and exit 
-        // action as a method
-        // or array of actions
-        enter() {},
-        exit: [() => {}]
-    },
-    {
-        type: 'D',
-        on: {
-            RESTART: 'A'
-        }
-    },
-    {
-        type: 'E',
-        on: {
-            RESTART: {
-                target: 'A',
-                actions: [ () => console.log('Running actions') ]
+const m = createMachine({
+    initial: 'B',
+    id: 'myfancystatemachine',
+    states: {
+        A: {},
+        B: {
+            enter() {},
+            exit: [()=>{}]
+        },
+        C: {
+            on: {
+                RESTART: 'A'
+            }
+        },
+        D: {
+            on: {
+                RESTART: {
+                    target: 'A',
+                    actions: [ () => {} ]
+                }
             }
         }
     }
