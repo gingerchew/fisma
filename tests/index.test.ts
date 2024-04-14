@@ -20,14 +20,28 @@ describe('Finite State Machine', () => {
         expect('subscribe' in _).toBe(true);
     });
 
-    it('should have a default id', () => {
+    // @ts-ignore
+    test.fails('Fails when no config is passed', () => createMachine())
+    // @ts-ignore
+    test.fails('Fails when no states are passed', () => createMachine({ id: 'this-should-fail' }));
+    it('should create a default id', () => {
         const m = createMachine({
             states: { A }
         });
 
         expect(typeof m.id).toBe('string');
-        expect(m.id.indexOf('machine')).toBe(0);
+        expect(m.id.indexOf('m-')).toBe(0);
     });
+
+    it('should store a passed id', () => {
+        const m = createMachine({
+            id: 'myId',
+            states: { A }
+        });
+
+        expect(m.id).toBe('myId');
+    })
+
 
     it('should have the correct initial state', () => {
         const m = createMachine({
@@ -42,8 +56,6 @@ describe('Finite State Machine', () => {
         expect(n.current).toBe('B')
     })
 
-    // @ts-ignore
-    test.fails('Fails when stateless', () => createMachine())
 
     test('Goes to next state', () => {
         const _ = createMachine({
