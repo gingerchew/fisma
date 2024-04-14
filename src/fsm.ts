@@ -8,15 +8,19 @@ export function* Engine<T extends Record<string, State>>(states: T, initial?: ke
     }
     
     let shouldLoop = true,
-        activeState,
+        activeState:State,
         nextStateIndex = stateKeys.indexOf(initial as string),
         prevStateIndex = -1,
         requestedState:string | undefined = initial as string;
 
     while(shouldLoop) {
         
-        
         activeState = states[stateKeys[prevStateIndex = nextStateIndex]];
+
+        if (activeState.cond && !(activeState.cond())) yield {
+            ...activeState,
+            type: stateKeys[nextStateIndex]
+        };
         
         if (requestedState !== stateKeys[nextStateIndex]) 
             runActions(activeState?.enter, activeState)
