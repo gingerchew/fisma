@@ -2,7 +2,7 @@
 
 ## What is it
 
-Fisma is a 422b (br,min) **_fi_**nite **_s_**tate _**ma**_chine that is built on Generators. It features entry/exit actions, events, sending signals to transition to a specific state.
+Fisma is a 422b (br,min) ***fi***nite ***s***tate ***ma***chine that is built on Generators. It features entry/exit actions, events, sending signals to transition to a specific state.
 
 ## How to use
 
