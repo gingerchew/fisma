@@ -1,7 +1,7 @@
 // Add import.meta.env.* for intellisense
 /// <reference types="vite/client" />
 import { StateTarget, Listener, Machine, MachineConfig, State, ReturnedState } from './types';
-import { keys, runActions } from './utils';
+import { createId, keys, runActions } from './utils';
 import { Engine } from './fsm';
 
 function createMachine<T extends Record<string, State>>(config: MachineConfig<T>):Machine<T> {
@@ -12,7 +12,7 @@ function createMachine<T extends Record<string, State>>(config: MachineConfig<T>
 
     const stateKeys = keys(config.states), {
         states,
-        id = `m-${crypto.randomUUID()}`,
+        id,
         initial = stateKeys[0] as keyof T,
         final,
     } = config;
@@ -42,7 +42,7 @@ function createMachine<T extends Record<string, State>>(config: MachineConfig<T>
     }
 
     return {
-        id: id,
+        id: createId(id),
         initial: initial!,
         /** Getters */
         get current() {
