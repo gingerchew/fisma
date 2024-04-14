@@ -15,22 +15,30 @@ export interface StateTarget {
 export type Events = Record<string, string | StateTarget>;
 
 export interface State {
-    type: string|-1;
-    on: Events;
-    enter: Action|Action[];
-    exit: Action|Action[];
+    on?: Events;
+    enter?: Action|Action[];
+    exit?: Action|Action[];
 }
 
 export const inactiveState = { type: -1 };
-
+export type ReturnedState = State & { type: string | -1 };
 export type InactiveState = Partial<State> & typeof inactiveState;
 export type UnformattedState = Partial<State> & { type: string };
 
-export interface Machine {
-    current: State['type'];
+export interface Machine<T extends Record<string, State>> {
+    id: string;
+    initial: keyof T;
+    current: keyof T;
     done: boolean;
     next: (requestedState?:string) => void;
     subscribe: (listener:Listener) => () => void;
     send: (eventType: string) => void;
     destroy: () => void;
+}
+
+export interface MachineConfig<T extends Record<string, State>> {
+    id?: string;
+    final?: keyof T;
+    initial?: keyof T;
+    states: T;
 }

@@ -1,26 +1,42 @@
 // Add import.meta.env.* for intellisense
 /// <reference types="vite/client" />
-import { StateTarget, inactiveState, UnformattedState, Listener, Machine } from './types';
-import { createState, runActions } from './utils';
-import { _FSM } from './fsm';
+import { StateTarget, Listener, Machine, MachineConfig, State, ReturnedState } from './types';
+import { keys, runActions } from './utils';
+import { Engine } from './fsm';
 
-
-function createMachine(states:(string|UnformattedState)[]):Machine {
+function createMachine<T extends Record<string, State>>(config: MachineConfig<T>):Machine<T> {
+    
+    const stateKeys = keys(config.states), {
+        states,
+        id = `machine-${crypto.randomUUID()}`,
+        initial = stateKeys[0] as keyof T,
+        final,
+    } = config;
+    
     if (import.meta.env.DEV) {
-        if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
+        if (Object.keys(states).length === 0) throw new Error('Machine cannot be stateless');
     }
-	const _states = _FSM(states.map(createState)), listeners = new Set<Listener>();
+
+	const _states = Engine<T>(states, initial, final), listeners = new Set<Listener>();
     let _ctx = _states.next();
 
+
 	const next = (requestedState?:string) => {
-        
+        // Don't transition to a nonexistent state
+        if (requestedState && stateKeys.indexOf(requestedState) === -1) return;
+        if (requestedState === _ctx.value.type) {
+            return;
+        }
         _ctx = _states.next(requestedState);
         listeners.forEach(listener => listener(_ctx.value!));
     }
+
     return {
+        id,
+        initial: initial!,
         /** Getters */
         get current() {
-            return _ctx.value.type;
+            return _ctx.value!.type as keyof T;
         },
         get done() {
             return !!_ctx.done;
@@ -34,13 +50,15 @@ function createMachine(states:(string|UnformattedState)[]):Machine {
         subscribe(listener:Listener) {
             listeners.add(listener);
 
-            listener(_ctx.value);
+            listener(_ctx.value!);
             return () => listeners.delete(listener);
         },
         send(eventType:string) {
-            const state = _ctx.value
+            const state = _ctx.value as ReturnedState;
+            if (typeof state!.type === 'number') return;
+            
             if (state?.on) {
-                let nextState = state.on[eventType];
+                let nextState = state.on?.[eventType];
                 
                 if (typeof nextState !== 'string') {
                     runActions(nextState.actions, state);
@@ -57,9 +75,10 @@ function createMachine(states:(string|UnformattedState)[]):Machine {
         /**
          * Kill the state machine/generator
         */
-       destroy() {
+        destroy() {
             // @ts-ignore
-            _ctx = _states.return(inactiveState);
+            _ctx = _states.return({ type: -1 });
+
             listeners.forEach(listener => listeners.delete(listener));
 		}
 	}
