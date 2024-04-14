@@ -18,11 +18,5 @@ describe('fisma/transition guard', () => {
         shouldTrans = true;
         m.next();
         expect(m.current).toBe('B');
-        console.log(m);
-    })
-
-
-    it('should run still??', () => {
-        expect(true).toBe(true);
     })
 })
