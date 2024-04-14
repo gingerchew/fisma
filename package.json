@@ -33,8 +33,8 @@
   ],
   "size-limit": [
     {
-      "path": "src/index.ts",
-      "limit": "5kb"
+      "path": "dist/fisma.js",
+      "limit": "1.42kb"
     }
   ]
 }
