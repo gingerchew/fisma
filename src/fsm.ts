@@ -15,12 +15,13 @@ export function* Engine<T extends Record<string, State>>(states: T, initial?: ke
 
     while(shouldLoop) {
         
-        if (stateKeys[nextStateIndex] === final) return inactiveState;
-
+        
         activeState = states[stateKeys[prevStateIndex = nextStateIndex]];
         
         if (requestedState !== stateKeys[nextStateIndex]) 
             runActions(activeState?.enter, activeState)
+        
+        if (stateKeys[nextStateIndex] === final) return inactiveState;
         
         requestedState = yield {
             ...activeState,
