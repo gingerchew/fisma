@@ -1,5 +1,8 @@
 import { UnformattedState, Action, InactiveState, State } from "./types";
 
+let i = 0;
+export const createId = (id?: string) => id ?? `m-${++i}`;
+
 export const createState = (state:UnformattedState) => Object.assign({
     enter: [],
     exit: [],
