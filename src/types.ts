@@ -18,6 +18,7 @@ export interface State {
     on?: Events;
     enter?: Action|Action[];
     exit?: Action|Action[];
+    cond?: () => boolean;
 }
 
 export const inactiveState = { type: -1 };
