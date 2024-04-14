@@ -1,46 +1,43 @@
-import { inactiveState, State, InactiveState } from './types';
-import { runActions } from './utils';
-/**
- * The internal engine of fisma
- * 
- * this will loop perpetually, or until fisma.destroy() is called, and cycle through states
- */
-export function* _FSM(states:State[]):Generator<State, InactiveState, string|undefined> {
-	let nextState = 0,
-		prevState = -1,
-		activeState = states[nextState],
-        requestedState:string|undefined = activeState.type as string;
+import { inactiveState, State, InactiveState, ReturnedState } from './types';
+import { runActions, keys } from './utils';
 
-	while (true) {
-		if (nextState >= states.length) nextState = 0;
-		
-        // prevents enter actions running on initial state
-		if (requestedState !== activeState.type)
-            runActions(states[nextState].enter, activeState);
-		
-		activeState = states[prevState = nextState];
-		
-		requestedState = yield activeState;
+export function* Engine<T extends Record<string, State>>(states: T, initial?: keyof T, final?: keyof T):Generator<ReturnedState, InactiveState, string | undefined> {
+    const stateKeys = keys(states);
+    if (!initial) {
+        initial = stateKeys[0];
+    }
+    
+    let shouldLoop = true,
+        activeState,
+        nextStateIndex = stateKeys.indexOf(initial as string),
+        prevStateIndex = -1,
+        requestedState:string | undefined = initial as string;
 
-        /**
-         * Only run actions if the requestedState is new
-         * 
-         * ```js
-         * machine.current // A
-         * machine.next('A') // no enter/exit actions will run
-         * ```
-         */
-        if (requestedState === activeState.type) continue;
+    while(shouldLoop) {
+        
+        if (stateKeys[nextStateIndex] === final) return inactiveState;
 
-        runActions(states[prevState].exit, activeState);
-
-        if (requestedState) {
-            nextState = states.findIndex(state => state.type === requestedState);
-            if (nextState === -1) nextState = prevState;
-        } else {
-            nextState = states.findIndex(state => state.type === activeState.type) + 1;
+        activeState = states[stateKeys[prevStateIndex = nextStateIndex]];
+        
+        if (requestedState !== stateKeys[nextStateIndex]) 
+            runActions(activeState?.enter, activeState)
+        
+        requestedState = yield {
+            ...activeState,
+            type: stateKeys[nextStateIndex],
         }
-	}
-    // Appeases the typescript gods
-    return inactiveState as InactiveState;
+
+        runActions(states[stateKeys[prevStateIndex]]?.exit, activeState);
+        
+        if (!!requestedState) {
+            nextStateIndex = stateKeys.indexOf(requestedState);
+        } else {
+            nextStateIndex += 1;
+            if (nextStateIndex >= stateKeys.length) nextStateIndex = 0;
+        }
+        
+
+    }
+
+    return inactiveState
 }
