@@ -4,6 +4,7 @@
   "description": "A FInite State MAchine built with iterators",
   "main": "index.js",
   "type": "module",
+  "types": "./src/types.ts",
   "scripts": {
     "size": "size-limit",
     "build": "vite build",
