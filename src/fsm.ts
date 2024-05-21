@@ -4,6 +4,8 @@ import { runActions } from './utils';
  * The internal engine of fisma
  * 
  * this will loop perpetually, or until fisma.destroy() is called, and cycle through states
+ * @param states an array of states
+ * @returns A finite state machine
  */
 export function* _FSM(states:State[]):Generator<State, InactiveState, string|undefined> {
 	let nextState = 0,

@@ -4,7 +4,11 @@ import { StateTarget, inactiveState, UnformattedState, Listener, Machine } from 
 import { createState, runActions } from './utils';
 import { _FSM } from './fsm';
 
-
+/**
+ * Creates the machine from an array of finite states
+ * @param states An array of states that can be converted into a machine
+ * @returns Machine
+ */
 function createMachine(states:(string|UnformattedState)[]):Machine {
     if (import.meta.env.DEV) {
         if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
