@@ -1,0 +1,5 @@
+{
+    "name": "@ginger/fisma",
+    "version": "0.6.0",
+    "exports": "./src/index.ts"
+}
