@@ -1,6 +1,6 @@
 {
   "name": "fisma",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "A FInite State MAchine built with iterators",
   "main": "index.js",
   "type": "module",
