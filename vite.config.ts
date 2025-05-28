@@ -1,6 +1,7 @@
 // vite.config.js
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
+import { terser } from 'rollup-plugin-terser';
 
 export default defineConfig({
   build: {
@@ -13,6 +14,17 @@ export default defineConfig({
       // the proper extensions will be added
       fileName: 'fisma',
       formats: ['es']
+    },
+    rollupOptions: {
+      plugins: [terser({
+        format: {
+          comments: false
+        },
+        mangle: {
+          keep_classnames: false,
+          reserved: []
+        }
+      })]
     }
-  }
+  },
 })
