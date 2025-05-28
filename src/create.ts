@@ -17,19 +17,18 @@ function createMachine(states:(string|UnformattedState)[]):Machine {
     let _ctx = _states.next();
 
 	const next = (requestedState?:string) => {
-        
         _ctx = _states.next(requestedState);
         listeners.forEach(listener => listener(_ctx.value!));
     }
     return {
-        /** Getters */
-        get current() {
-            return _ctx.value.type;
-        },
-        get done() {
-            return !!_ctx.done;
-        },
-        /** Methods */
+        current: () => _ctx.value.type,
+        done: () => !!_ctx.done,
+        /**
+         * Toggle through the state machine
+         * Passing an optional state name will 
+         * go to that state instead of
+         * the next in index order
+         */
         next,
         /**
          * Add a listener that fires on every state change
@@ -53,16 +52,9 @@ function createMachine(states:(string|UnformattedState)[]):Machine {
             }
         },
         /**
-         * Toggle through the state machine
-         * Passing an optional state name will 
-         * go to that state instead of
-         * the next in index order
-         */
-        /**
          * Kill the state machine/generator
         */
        destroy() {
-            // @ts-ignore
             _ctx = _states.return(inactiveState);
             listeners.forEach(listener => listeners.delete(listener));
 		}
