@@ -8,21 +8,20 @@ import { runActions } from './utils';
  * @returns A finite state machine
  */
 export function* _FSM(states:State[]):Generator<State, InactiveState, string|undefined> {
-	let nextState = 0,
-		prevState = -1,
-		activeState = states[nextState],
+	let nextStateIndex = 0,
+		prevStateIndex = -1,
+		activeState = states[nextStateIndex],
         requestedState:string|undefined = activeState.type as string;
 
 	while (true) {
-		if (nextState >= states.length) nextState = 0;
+        nextStateIndex = nextStateIndex >= states.length ? 0 : nextStateIndex;
+		// if (nextStateIndex >= states.length) nextStateIndex = 0;
 		
         // prevents enter actions running on initial state
 		if (requestedState !== activeState.type)
-            runActions(states[nextState].enter, activeState);
+            runActions(states[nextStateIndex].enter, activeState);
 		
-		activeState = states[prevState = nextState];
-		
-		requestedState = yield activeState;
+		requestedState = yield activeState = states[prevStateIndex = nextStateIndex];
 
         /**
          * Only run actions if the requestedState is new
@@ -34,14 +33,15 @@ export function* _FSM(states:State[]):Generator<State, InactiveState, string|und
          */
         if (requestedState === activeState.type) continue;
 
-        runActions(states[prevState].exit, activeState);
-
-        if (requestedState) {
-            nextState = states.findIndex(state => state.type === requestedState);
-            if (nextState === -1) nextState = prevState;
-        } else {
-            nextState = states.findIndex(state => state.type === activeState.type) + 1;
-        }
+        runActions(states[prevStateIndex].exit, activeState);
+        /**
+         * If there is a requested state, get the index of the state with the same type
+         * If there is no requested state, increment by one
+         * if the requested state does not exist, keep the previous state
+         */
+        nextStateIndex = states.findIndex(state => state.type === (requestedState ?? activeState.type))
+        if (nextStateIndex === -1) nextStateIndex = prevStateIndex;
+        if (!requestedState) nextStateIndex += 1;
 	}
     // Appeases the typescript gods
     return inactiveState as InactiveState;
