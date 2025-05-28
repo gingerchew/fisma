@@ -29,12 +29,12 @@ export interface State {
     exit: Action|Action[];
 }
 
-export const inactiveState = { type: -1 };
+export const inactiveState:InactiveState = { type: -1 };
 
 /**
  * A state that has been made inactive
  */
-export type InactiveState = Partial<State> & typeof inactiveState;
+export type InactiveState = Partial<State> & { type: -1 };
 /**
  * A state that has not been processed to be interpreted by a machine
  */
@@ -44,8 +44,8 @@ export type UnformattedState = Partial<State> & { type: string };
  * The interface for the machine that is created by the createMachine function
  */
 export interface Machine {
-    current: State['type'];
-    done: boolean;
+    current(): State['type'];
+    done(): boolean;
     next: (requestedState?:string) => void;
     subscribe: (listener:Listener) => () => void;
     send: (eventType: string) => void;
