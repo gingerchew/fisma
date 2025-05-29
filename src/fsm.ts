@@ -41,6 +41,6 @@ export function* _FSM(states:State[]):Generator<State, InactiveState, string|und
          */
         nextStateIndex = states.findIndex(state => state.type === (requestedState ?? activeState.type))
         if (nextStateIndex === -1) nextStateIndex = prevStateIndex;
-        if (!requestedState) nextStateIndex += 1;
+        requestedState ?? (nextStateIndex += 1);
 	}
 }
