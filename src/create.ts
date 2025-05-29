@@ -1,6 +1,7 @@
 // Add import.meta.env.* for intellisense
 /// <reference types="vite/client" />
-import { StateTarget, inactiveState, UnformattedState, Listener, Machine, Events } from './types';
+import type { StateTarget, UnformattedState, Listener, Machine } from './types';
+import { inactiveState } from './types';
 import { createState, isString, runActions } from './utils';
 import { _FSM } from './fsm';
 

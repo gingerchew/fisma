@@ -1,4 +1,4 @@
-import { inactiveState, State, InactiveState } from './types';
+import type { State, InactiveState } from './types';
 import { runActions } from './utils';
 /**
  * The internal engine of fisma
