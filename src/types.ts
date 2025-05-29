@@ -29,8 +29,6 @@ export interface State {
     exit: Action|Action[];
 }
 
-export const inactiveState:InactiveState = { type: -1 };
-
 /**
  * A state that has been made inactive
  */
