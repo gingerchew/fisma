@@ -7,8 +7,8 @@ describe('Finite State Machine', () => {
     test('Returns createMachine object', () => {
         const _ = createMachine(['A']);
 
-        expect(_.current).toBe('A');
-        expect(_.done).toBe(false);
+        expect(_.current()).toBe('A');
+        expect(_.done()).toBe(false);
         expect('next' in _).toBe(true);
         expect('destroy' in _).toBe(true);
         expect('send' in _).toBe(true);
@@ -24,20 +24,20 @@ describe('Finite State Machine', () => {
             { type: 'B' }
         ]);
 
-        expect(_.current).toBe('A');
+        expect(_.current()).toBe('A');
         _.next();
-        expect(_.current).toBe('B');
+        expect(_.current()).toBe('B');
     });
 
     test('Is destroyed properly', () => {
         const _ = createMachine(['A']);
-        expect(_.current).toBe('A');
-        expect(_.done).toBe(false);
+        expect(_.current()).toBe('A');
+        expect(_.done()).toBe(false);
 
         _.destroy();
 
-        expect(_.current).toBe(-1);
-        expect(_.done).toBe(true);
+        expect(_.current()).toBe(-1);
+        expect(_.done()).toBe(true);
     });
 
     test('Enter actions: single', () => {
@@ -99,11 +99,11 @@ describe('Finite State Machine', () => {
             { type: 'TOGGLE' }
         ]);
 
-        expect(_.current).toBe('A');
+        expect(_.current()).toBe('A');
 
         _.next('TOGGLE');
 
-        expect(_.current).toBe('TOGGLE');
+        expect(_.current()).toBe('TOGGLE');
     });
 
     test('Transition to non-existant state should stay at current state', () => {
@@ -112,9 +112,9 @@ describe('Finite State Machine', () => {
             { type: 'B' }
         ]);
 
-        expect(_.current).toBe('A');
+        expect(_.current()).toBe('A');
         _.next('C');
-        expect(_.current).toBe('A');
+        expect(_.current()).toBe('A');
     });
 
     test('Support string only state', () => {
@@ -123,7 +123,7 @@ describe('Finite State Machine', () => {
             { type: 'B' }
         ]);
 
-        expect(_.current).toBe('A');
+        expect(_.current()).toBe('A');
     });
 
     test('Subscribe', () => {
@@ -160,9 +160,9 @@ describe('Finite State Machine', () => {
         ]);
 
 
-        expect(_.current).toBe('A');
+        expect(_.current()).toBe('A');
         _.send('NEXT');
-        expect(_.current).toBe('C');
+        expect(_.current()).toBe('C');
     });
 
     test('Send Actions', () => {
