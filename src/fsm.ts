@@ -36,8 +36,8 @@ export function* _FSM(states:State[]):Generator<State, InactiveState, string|und
         runActions(states[prevStateIndex].exit, activeState);
         /**
          * If there is a requested state, get the index of the state with the same type
-         * If there is no requested state, increment by one
          * if the requested state does not exist, keep the previous state
+         * If there is no requested state, increment by one
          */
         nextStateIndex = states.findIndex(state => state.type === (requestedState ?? activeState.type))
         if (nextStateIndex === -1) nextStateIndex = prevStateIndex;
