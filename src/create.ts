@@ -1,7 +1,7 @@
 // Add import.meta.env.* for intellisense
 /// <reference types="vite/client" />
-import { StateTarget, inactiveState, UnformattedState, Listener, Machine } from './types';
-import { createState, runActions } from './utils';
+import { StateTarget, inactiveState, UnformattedState, Listener, Machine, Events } from './types';
+import { createState, isString, runActions } from './utils';
 import { _FSM } from './fsm';
 
 /**
@@ -12,11 +12,13 @@ import { _FSM } from './fsm';
 function createMachine(states:(string|UnformattedState)[]):Machine {
     if (import.meta.env.DEV) {
         if (!states || states.length === 0) throw new Error('Machine cannot be stateless');
+        if (!Array.isArray(states)) throw new Error('Machine cannot be initiated with a type other than array');
     }
-	const _states = _FSM(states.map(createState)), listeners = new Set<Listener>();
-    let _ctx = _states.next();
-
-	const next = (requestedState?:string) => {
+	let formattedStates = states.map(createState),
+        _states = _FSM(formattedStates),
+        listeners = new Set<Listener>(),
+        _ctx = _states.next(),
+        next = (requestedState?:string) => {
         _ctx = _states.next(requestedState);
         listeners.forEach(listener => listener(_ctx.value!));
     }
@@ -40,23 +42,19 @@ function createMachine(states:(string|UnformattedState)[]):Machine {
             listener(_ctx.value);
             return () => listeners.delete(listener);
         },
-        send(eventType:string) {
-            const state = _ctx.value
-            if (state?.on) {
-                let nextState = state.on[eventType];
-                
-                if (typeof nextState !== 'string') {
-                    runActions(nextState.actions, state);
-                }
-                next((nextState as StateTarget)?.target ?? nextState)
+        send(eventType) {
+            const nextState = _ctx.value?.on?.[eventType];
+            if (!isString(nextState)) {
+                runActions(nextState!.actions, _ctx.value);
             }
+            next((nextState as StateTarget)?.target ?? nextState)
         },
         /**
          * Kill the state machine/generator
         */
        destroy() {
+           listeners.clear();
             _ctx = _states.return(inactiveState);
-            listeners.forEach(listener => listeners.delete(listener));
 		}
 	}
 }

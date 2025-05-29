@@ -48,6 +48,6 @@ export interface Machine {
     done(): boolean;
     next: (requestedState?:string) => void;
     subscribe: (listener:Listener) => () => void;
-    send: (eventType: string) => void;
+    send: (eventType: State['type']) => void;
     destroy: () => void;
 }

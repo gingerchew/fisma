@@ -1,12 +1,16 @@
 import { UnformattedState, Action, InactiveState, State } from "./types";
 
-export const createState = (state:string|UnformattedState) => Object.assign({
+export const isString = (obj:unknown): obj is string => typeof obj === 'string';
+export const createState = (typeOrUnformattedState: string|UnformattedState) => ({
     enter: [],
     exit: [],
-    on: {}
-}, typeof state === 'string' ? { type: state } : state)
-
-export const runActions = (actions: Action|Action[], activeState:State|InactiveState) => {
+    on: {},
+    ...(
+        isString(typeOrUnformattedState)? 
+            { type: typeOrUnformattedState } : 
+            typeOrUnformattedState
+    )
+})
+export const runActions = (actions: Action|Action[], activeState:State|InactiveState) => 
     ([] as Action[]).concat(actions).forEach(action => action(activeState))
-};
 
