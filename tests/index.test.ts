@@ -17,6 +17,10 @@ describe('Finite State Machine', () => {
 
     // @ts-ignore
     test.fails('Fails when stateless', () => createMachine())
+    test.fails('Fails when not an array', () => {
+        // @ts-expect-error
+        createMachine('this should throw an error')
+    });
 
     test('Goes to next state', () => {
         const _ = createMachine([
@@ -35,7 +39,7 @@ describe('Finite State Machine', () => {
         expect(_.done()).toBe(false);
 
         _.destroy();
-
+        console.log(_);
         expect(_.current()).toBe(-1);
         expect(_.done()).toBe(true);
     });

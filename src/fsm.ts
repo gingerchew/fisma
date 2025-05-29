@@ -43,6 +43,4 @@ export function* _FSM(states:State[]):Generator<State, InactiveState, string|und
         if (nextStateIndex === -1) nextStateIndex = prevStateIndex;
         if (!requestedState) nextStateIndex += 1;
 	}
-    // Appeases the typescript gods
-    return inactiveState as InactiveState;
 }
